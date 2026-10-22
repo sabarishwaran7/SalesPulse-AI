@@ -5,7 +5,9 @@ from backend.app.core.config import settings
 
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 if "sqlite" in db_url:
     engine = create_engine(
@@ -13,10 +15,17 @@ if "sqlite" in db_url:
         connect_args={"check_same_thread": False}
     )
 else:
+    connect_args = {}
+    if "supabase.com" in db_url and "sslmode" not in db_url:
+        connect_args["sslmode"] = "require"
+
     engine = create_engine(
         db_url,
+        connect_args=connect_args,
         pool_pre_ping=True,
-        pool_recycle=300
+        pool_recycle=300,
+        pool_size=10,
+        max_overflow=20
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
