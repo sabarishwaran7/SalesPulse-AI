@@ -1,0 +1,258 @@
+{
+  "info": {
+    "name": "SalesPulse AI API Collection",
+    "description": "Postman API Collection for SalesPulse AI: Self-Correcting Sales Call & Meeting Intelligence Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard?sales_rep=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "dashboard"],
+              "query": [
+                { "key": "sales_rep", "value": "all" },
+                { "key": "start_date", "value": "", "disabled": true },
+                { "key": "end_date", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations (Paginated & Filtered)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/conversations?page=1&page_size=15&sort_by=conversation_date&sort_dir=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "15" },
+                { "key": "sort_by", "value": "conversation_date" },
+                { "key": "sort_dir", "value": "desc" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "transcript_status", "value": "all", "disabled": true },
+                { "key": "completeness", "value": "all", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/conversations/1"
+          }
+        },
+        {
+          "name": "Upload Late Transcript (Triggers AI & Completeness Update)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transcript\": \"Rep: Hello Alex, thanks for joining our demo today. Customer: We want to review the pricing tier and see if you offer volume discounts. Rep: Yes, our Enterprise tier includes custom volume discounting for over 50 users.\"\n}"
+            },
+            "url": "{{baseUrl}}/conversations/1/transcript"
+          }
+        },
+        {
+          "name": "Update Conversation Metadata",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"follow_up_status\": \"Completed\",\n  \"duration_seconds\": 1800\n}"
+            },
+            "url": "{{baseUrl}}/conversations/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Smart Imports",
+      "item": [
+        {
+          "name": "Step 1: Upload & Preview Smart Diff",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/imports/preview"
+          }
+        },
+        {
+          "name": "Step 2: Commit or Cancel Import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job_id\": 1,\n  \"action\": \"commit\",\n  \"conflict_resolutions\": {}\n}"
+            },
+            "url": "{{baseUrl}}/imports/commit"
+          }
+        },
+        {
+          "name": "Get Import History",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/imports/history"
+          }
+        },
+        {
+          "name": "Export Import Errors",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/imports/1/errors/export?format=csv"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Review Center",
+      "item": [
+        {
+          "name": "Get AI Review Queue",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ai-review/queue"
+          }
+        },
+        {
+          "name": "Approve AI Classification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"review_action\": \"approve\"\n}"
+            },
+            "url": "{{baseUrl}}/ai-review/1/review"
+          }
+        },
+        {
+          "name": "Apply Manager Corrections",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"review_action\": \"correct\",\n  \"purposes_to_add\": [\"Pricing\"],\n  \"purposes_to_remove\": [],\n  \"edited_summary\": \"Updated executive meeting notes.\",\n  \"notes\": \"Verified customer explicitly discussed license tiers.\"\n}"
+            },
+            "url": "{{baseUrl}}/ai-review/1/review"
+          }
+        },
+        {
+          "name": "Re-run AI Analysis",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai-review/1/reanalyze"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Action Center",
+      "item": [
+        {
+          "name": "List Prioritized Actions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actions?status=Open"
+          }
+        },
+        {
+          "name": "Update Action Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\"\n}"
+            },
+            "url": "{{baseUrl}}/actions/1/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & Exports",
+      "item": [
+        {
+          "name": "Export All Conversations (CSV)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/export?report_type=all_conversations&format=csv"
+          }
+        },
+        {
+          "name": "Export Incomplete Conversations (Excel)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/export?report_type=incomplete_conversations&format=xlsx"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/settings"
+          }
+        },
+        {
+          "name": "Seed Demonstration Data",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/settings/seed-sample-data"
+          }
+        }
+      ]
+    }
+  ]
+}
