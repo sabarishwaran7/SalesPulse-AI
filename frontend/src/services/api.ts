@@ -151,4 +151,49 @@ export const api = {
     const params = new URLSearchParams({ report_type: reportType, format, ...filters });
     return `${API_BASE}/reports/export?${params.toString()}`;
   },
+
+  // SpendNest Revenue Intelligence APIs
+  getSpendnestDashboard: (params: Record<string, string> = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request<any>(`/spendnest/dashboard?${query}`);
+  },
+
+  listSpendnestConversations: (params: Record<string, string> = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request<{ total: number; conversations: any[] }>(`/spendnest/conversations?${query}`);
+  },
+
+  getSpendnestConversation: (id: number) =>
+    request<any>(`/spendnest/conversations/${id}`),
+
+  updateSpendnestRoute: (id: number, routes: string[], reason?: string) =>
+    request<{ message: string; assigned_routes: string[]; is_manually_routed: boolean; analysis_freshness: string }>(
+      `/spendnest/conversations/${id}/route`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ routes, reason }),
+      }
+    ),
+
+  replayInitialBatch: () =>
+    request<{ action: string; description: string; result: any }>(`/spendnest/replay/initial`, {
+      method: 'POST',
+    }),
+
+  replayUpdateBatch: () =>
+    request<{ action: string; description: string; result: any }>(`/spendnest/replay/update`, {
+      method: 'POST',
+    }),
+
+  replayResetDatabase: () =>
+    request<{ action: string; description: string; result: any }>(`/spendnest/replay/reset`, {
+      method: 'POST',
+    }),
+
+  getManagerDailyBrief: () =>
+    request<{ brief_date: string; timezone: string; title: string; markdown_content: string }>(
+      `/spendnest/daily-brief`
+    ),
+
+  getSpendnestExportArchiveUrl: () => `${API_BASE}/spendnest/export-archive`,
 };

@@ -136,3 +136,85 @@ export interface DashboardAnalytics {
     follow_ups_open: number;
   }[];
 }
+
+export interface SpendNestEvidenceCitation {
+  quote_or_turn: string;
+  speaker: string;
+  timecode?: string;
+  significance: string;
+}
+
+export interface SpendNestActionItem {
+  action: string;
+  owner?: string;
+  deadline?: string;
+}
+
+export interface SpendNestStructuredAnalysis {
+  what_happened_and_why_it_matters?: string;
+  evidence_citations?: SpendNestEvidenceCitation[];
+  what_evidence_does_not_establish?: string;
+  next_steps_and_owners?: SpendNestActionItem[];
+  coaching_notes?: string;
+  requirements?: string[];
+  objections?: string[];
+}
+
+export interface SpendNestConversation {
+  id: number;
+  record_ref: string;
+  source_type: 'call' | 'meeting';
+  source_id: string;
+  customer_name: string;
+  sales_rep_name: string;
+  rep_email?: string;
+  organizer_email?: string;
+  conversation_date: string;
+  duration_seconds: number;
+  direction?: string;
+  has_usable_text: boolean;
+  unavailable_reason?: string;
+  revision: number;
+  batch_id: string;
+  assigned_routes: string[];
+  routing_reason?: string;
+  manual_route_override?: string[];
+  is_manually_routed: boolean;
+  analysis_freshness: string;
+  summary?: string;
+  transcript?: string;
+  structured_analysis?: SpendNestStructuredAnalysis;
+}
+
+export interface SpendNestDashboard {
+  dataset_date: string;
+  timezone: string;
+  kpis: {
+    total_selected_records: number;
+    total_records_denominator: number;
+    usable_transcript_coverage_count: number;
+    usable_transcript_coverage_percent: number;
+    calls_count: number;
+    calls_transcribed: number;
+    meetings_count: number;
+    meetings_transcribed: number;
+    source_reported_connection_rate: {
+      connected_calls: number;
+      denominator_calls_with_status: number;
+      percentage: number;
+    };
+    manual_route_overrides_count: number;
+    stale_analysis_pending_review_count: number;
+  };
+  m07_status: {
+    record_ref: string;
+    applied_revision: number;
+    has_usable_text: boolean;
+    assigned_routes: string[];
+    is_manually_routed: boolean;
+    analysis_freshness: string;
+  };
+  reps_activity: Record<string, number>;
+  organizers_activity: Record<string, number>;
+  route_distribution: Record<string, number>;
+}

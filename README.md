@@ -1,207 +1,181 @@
-# SalesPulse AI
+# SalesPulse AI — Revenue Intelligence Inbox (SpendNest)
 
-## Self-Correcting Sales Call & Meeting Intelligence Platform
-
-**SalesPulse AI** is a production-grade sales conversation intelligence platform designed for sales managers, revenue operations, and executive leadership. It provides deep visibility into sales calls and meetings, detects incomplete records, flags uncertain AI classifications for human sign-off, safely previews incoming datasets via field-level diffs, and guarantees data integrity.
+A clickable, production-grade sales conversation intelligence platform designed for sales managers to analyze calls and meetings, identify missing information, detect incorrect classifications, safely import batch deliveries, preserve human judgment across revisions, and export machine-readable manifests with traceable evidence.
 
 ---
 
-## 🌟 Core Differentiating Features
+## ⚡ Quick Start (Local Setup)
 
-### 1. Smart Import Diff
-*Before* writing any uploaded CSV or Excel record to the PostgreSQL database, SalesPulse AI performs a complete differential analysis:
-- **Record Categorization**: Distinguishes **New**, **Updated**, **Unchanged**, **Duplicate Rows within File**, **Conflicts**, and **Invalid Rows**.
-- **Field-Level Diff Inspector**: Displays exact side-by-side comparisons of changed fields (`Old Value` vs `Proposed New Value`).
-- **Conflict Resolution**: Flagged conflicts (e.g. date discrepancies > 7 days, manual correction collisions, or transcript truncations) can be reviewed individually with options to *Keep Existing* or *Overwrite*.
-- **Transactional Commit & Rollback**: Safe database writes wrapped in transactions with audit events.
-- **Exportable Validation Logs**: Row-level errors can be exported directly as CSV or Excel.
+### Prerequisites
+- Python 3.10+ (Python 3.13 tested)
+- Node.js 18+ and npm
+- PostgreSQL database (Supabase PostgreSQL configured or local PostgreSQL)
 
-### 2. Conversation Completeness Score
-A transparent, explainable scoring engine evaluated on every conversation:
-- **Valid Identity (25%)**: Valid external Call ID, customer name, sales representative, and timestamp.
-- **Call Transcript (25%)**: Ingested transcript (non-empty &ge; 20 characters) with status `completed`.
-- **Purpose Classification (20%)**: At least one active purpose tag.
-- **AI Executive Summary (20%)**: Generated intelligence summary and structured extracts.
-- **Follow-up Status (10%)**: Explicit follow-up state assigned (`Pending`, `Overdue`, `Completed`).
-- **Late Transcript Pipeline**: Calls imported without transcripts enter the `Pending Transcripts` queue with an incomplete score. When transcripts arrive later, existing records update smoothly without duplication, triggering Groq AI analysis and recalculating completeness.
-
-### 3. Self-Correcting AI Review Center
-- **Groq AI Integration**: Employs `llama-3.3-70b-versatile` (or `mixtral-8x7b-32768`) with structured JSON schema enforcement.
-- **Multi-Purpose Classification**: Detects multiple purposes per conversation (*Sales*, *Product Demo*, *Pricing*, *Negotiation*, *Customer Support*, *Objection Handling*, *Follow-up*, *Renewal*).
-- **Supporting Evidence Snippets**: Extracts verbatim quotes proving why each label was assigned.
-- **Human Review Routing**: Predictions with confidence below the configurable threshold (default `0.75`) or conflicting purposes are routed to the Review Center.
-- **Side-by-Side Audit Workspace**: Sales managers can approve predictions, add missing labels, remove incorrect labels, and edit summaries.
-- **Immutable Audit Trail**: Preserves original model predictions alongside manager corrections and timestamps. Corrections do not pretend to retrain the model on-the-fly; they serve as a compliant audit log and evaluation dataset.
-
----
-
-## 🏗️ Architecture & Tech Stack
-
-```
-salespulse-ai/
-├── backend/
-│   ├── app/
-│   │   ├── api/v1/         # REST API endpoints (Analytics, Conversations, Imports, AI Review, Actions, Reports, Settings)
-│   │   ├── core/           # Configuration, Database engine, and settings
-│   │   ├── models/         # SQLAlchemy models (Conversations, Purposes, AIAnalyses, ImportJobs, AuditEvents)
-│   │   ├── schemas/        # Pydantic schemas and validation models
-│   │   ├── services/       # Smart Import diff engine, Groq AI, Completeness, Action recommendations, Exports
-│   │   └── utils/          # Date parsers, text hashers, diff engine
-│   ├── alembic/            # Database schema migration versions
-│   ├── tests/              # Pytest automated test suite (12 passing tests)
-│   └── requirements.txt    # Python dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── components/     # Reusable UI widgets (KpiCard, CompletenessBadge, StatusBadge, Sidebar, Navbar)
-│   │   ├── pages/          # 9 SaaS pages (Dashboard, Conversations, Details, Import, AI Review, Actions, Reports, History, Settings)
-│   │   ├── services/       # Typed API client
-│   │   └── types/          # TypeScript interfaces
-│   ├── package.json        # Frontend dependencies (React, Vite, Tailwind CSS, Recharts, Lucide)
-│   └── tailwind.config.js  # Styling tokens
-├── salespulse_api_collection.json # Postman API collection
-├── render.yaml             # Render backend deployment config
-├── pytest.ini              # Pytest configuration
-├── .env.example            # Environment variables template
-└── README.md
-```
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, Recharts, Lucide Icons, React Router 7 |
-| **Backend** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, Pandas, OpenPyXL |
-| **Database** | PostgreSQL on Supabase (with automatic SQLite fallback for local development) |
-| **AI Engine** | Groq Cloud API (`llama-3.3-70b-versatile`) with heuristic offline fallback |
-| **Testing** | Pytest, FastAPI TestClient, in-memory SQLite isolation |
-
----
-
-## 🚀 Quick Start Guide
-
-### 1. Prerequisites
-- **Python 3.10+** (tested on 3.13)
-- **Node.js 18+** & **npm**
-
-### 2. Backend Setup
+### 1. Backend Startup
 ```bash
-# 1. Navigate to project root
-cd "sales project"
+# In project root
+# 1. Activate virtual environment
+.\venv\Scripts\Activate.ps1    # On Windows PowerShell
+# or: source venv/bin/activate # On macOS/Linux
 
-# 2. Activate virtual environment
-# Windows:
-.\venv\Scripts\Activate.ps1
-# macOS/Linux:
-source venv/bin/activate
-
-# 3. Install backend dependencies
-pip install -r backend/requirements.txt
-
-# 4. Run database migrations
+# 2. Run database migrations
 alembic upgrade head
 
-# 5. Start FastAPI development server
+# 3. Start FastAPI backend (port 8000)
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-API Documentation (Swagger UI): `http://127.0.0.1:8000/docs`
+Backend API will be active at: `http://127.0.0.1:8000` (Swagger docs: `http://127.0.0.1:8000/docs`).
 
-### 3. Frontend Setup
+### 2. Frontend Startup
 ```bash
-# 1. Navigate to frontend directory
+# In another terminal window:
 cd frontend
-
-# 2. Install dependencies
 npm install
-
-# 3. Start Vite dev server
 npm run dev
 ```
-Open browser at: `http://127.0.0.1:5173/`
-
-### 4. Seed Demonstration Data
-On initial launch, the system automatically seeds sample calls. You can also trigger a re-seed at any time:
-- Via UI: Click the **"Reset Sample Data"** button in the top navigation bar.
-- Via API: `POST http://127.0.0.1:8000/api/v1/settings/seed-sample-data`
+Frontend Web Application will be live at: `http://127.0.0.1:5173`.
 
 ---
 
-## 🧪 Automated Testing
+## 🔁 How to Reproduce Each Replay Step (DATA_CONTRACT.md)
 
-SalesPulse AI includes a comprehensive automated test suite testing all critical business logic:
-- New conversation imports & duplicate detection inside files
-- Repeated identical imports (idempotency, 0 duplicate records created)
-- Field-level diff calculation on existing record updates
-- Safe transaction rollback on import cancellation
-- Late transcript arrival workflow (updates existing record, triggers AI, recalculates completeness)
-- Groq AI structured outputs with multiple purposes
-- AI review queue & manager approvals
-- Label corrections with before/after state audit persistence
-- Dashboard KPI metrics agreement with database records
-- CSV and Excel report exports
+The platform provides a dedicated **Evaluation Replay Controller** directly at the top of the main dashboard (`http://127.0.0.1:5173/`), as well as command-line script runners:
 
-To execute the test suite:
+| Step | Action in UI or Terminal | Expected & Verified Behavior |
+| :--- | :--- | :--- |
+| **1. Initial Import** | Click **"Reset Replay"** or run: `python -m backend.seed_spendnest` | Exactly 44 unique records loaded (30 calls, 14 meetings). Exactly 17 records have usable transcripts (10 calls, 7 meetings). M07 has 0 turns and status *"Transcript not included in this delivery..."*. |
+| **2. Repeat Batch** | Click **"Repeat Initial (01_initial)"** | Re-imports `01_initial.json`. System reports `0 created, 0 updated, 44 ignored`. Zero duplicates created; total unique records remains strictly 44. |
+| **3. Manual Correction** | On conversation `M07`, click **"Edit Route"**, select `Customer Follow-Up` & `Urgent Support Escalation`, enter reason, and click **"Lock Manual Route"**. | `is_manually_routed` is set to `true`. Route changes immediately to `Customer Follow-Up` with `[Locked 🔒]` badge. |
+| **4. Late Update Batch** | Click **"Apply Late Update (02_update)"** | Ingests `02_update.json` (Revision 2). Record `M07` is updated with its 27 turns! Total usable transcript count increases to **18 / 44 (40.9%)**. Total unique records remains strictly 44. |
+| **5. Preserve Judgment** | Refresh browser or restart application. | **`M07`'s manual route remains in full effect** (`Customer Follow-Up` / `Urgent Support Escalation`), its 27 turns are inspectable, and its analysis freshness is flagged as `Stale (Awaiting Review)` rather than silently overwritten. |
+| **6. Repeat Initial Again** | Click **"Repeat Initial"** again. | `01_initial.json` (Revision 1) is completely ignored because `revision 1 < revision 2`. Total records stays 44 and M07 stays at revision 2 with 18 usable texts. |
+
+### Running the Automated Replay Test Suite
+Execute the end-to-end replay test suite verifying all 6 steps:
 ```bash
-.\venv\Scripts\pytest.exe -v
+pytest backend/tests/test_spendnest_contract_and_replay.py -v
 ```
-**Result: 12 passed in 1.07s.**
+*(Result: 1 passed in ~15s, 0 failures)*.
 
 ---
 
-## 🌐 Production Deployment
+## 📊 Metric Definitions & Explicit Denominators (DATA_DICTIONARY.md)
 
-### 1. Database (Supabase PostgreSQL)
-1. Create a project at [supabase.com](https://supabase.com).
-2. Navigate to **Project Settings** &rarr; **Database** &rarr; **Connection string** (URI).
-3. Copy the pooled connection string:
-   ```
-   postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-   ```
-4. Set `DATABASE_URL` in your backend environment variables.
-5. Run migrations: `alembic upgrade head`.
+All interaction records fall on **Friday, 21 August 2026 in Asia/Kolkata**. Every headline number defines its explicit denominator:
 
-### 2. Backend (Render)
-1. Create a new Web Service on [Render](https://render.com).
-2. Connect your Git repository.
-3. Configure the service:
-   - **Environment**: `Python`
-   - **Build Command**: `pip install -r backend/requirements.txt && alembic upgrade head`
-   - **Start Command**: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
-4. Set Environment Variables:
-   - `DATABASE_URL`: Your Supabase connection string.
-   - `GROQ_API_KEY`: Your Groq API key (`gsk_...`).
-   - `GROQ_MODEL`: `llama-3.3-70b-versatile`
-   - `CONFIDENCE_THRESHOLD`: `0.75`
-
-### 3. Frontend (Vercel)
-1. Import the repository into [Vercel](https://vercel.com).
-2. Set **Root Directory** to `frontend`.
-3. Set **Framework Preset** to `Vite`.
-4. Environment Variables:
-   - `VITE_API_BASE_URL`: `https://your-render-backend.onrender.com/api/v1`
-5. Deploy.
+1. **Total Selected Records (`44`)**:
+   - *Denominator*: 44 unique source interactions (30 calls + 14 meetings).
+   - *Identity*: Strict pair `(source_type, source_id)`. Names, record refs, and phone tokens are never used as primary keys.
+2. **Usable Supplied Transcript Coverage (`17/44` &rarr; `18/44`)**:
+   - *Definition*: Records having a non-blank call transcript or at least one non-blank meeting turn divided by total selected records.
+   - *Initial Batch*: `17 / 44` (38.6%) = 10 calls (`C01`–`C10`) + 7 meetings (`M01`–`M04`, `M06`, `M09`, `M10`).
+   - *Post-Update*: `18 / 44` (40.9%) = `M07` receives 27 turns in `02_update.json`.
+3. **Outbound Calls Activity (`30`)**:
+   - 10 calls with usable text (`C01`–`C10`), 20 background telephony calls without text (`B01`–`B20`).
+4. **Calendar Meetings Activity (`14`)**:
+   - 7 meetings with speech initially (8 post-update), 4 recorded with zero speech (`M05`, `M08`, `M11`), 2 cancelled notetakers (`M12`, `M14`), and 1 unscheduled (`M13`).
+5. **Source-Reported Connection Rate (`11 / 30 = 36.7%`)**:
+   - *Formula*: Calls with `is_connected == true` (11) divided by calls with non-null `is_connected` status (30).
+   - *Scope*: Upstream telephony telemetry classification.
+6. **Rep vs Organizer Distinction**:
+   - **Call Representatives**: Arun (15 calls), Leela (8 calls), Meera (5 calls), Kiran (1 call), Dev (1 call).
+   - **Calendar Organizers**: `team06@example.com` through `team14@example.com`, `arun@example.com`. Meeting organizers are calendar booking accounts, not automatically selling reps or attended participants.
 
 ---
 
-## 📑 Postman API Collection
+## 🔍 Three Most Important Findings
 
-A complete Postman collection is included in [`salespulse_api_collection.json`](./salespulse_api_collection.json).
-Import this file into Postman or Insomnia to test:
-- Health check & Analytics endpoints
-- Conversations pagination & filtering
-- Late transcript upload
-- Smart Import preview and commit
-- AI review approvals and corrections
-- Action item status updates
-- CSV/Excel report generation
+Each finding is tethered to an exact source passage citation and states the exact product screen, rule, and output it influenced:
+
+### Finding 1: Asterloom Systems (M03) — Dual-Approval Corporate Card Controls
+- **What Was Noticed**: Customer B stated their overseas team already has an international card provider they are satisfied with. However, they have an urgent domestic problem: employee reimbursements are currently handled via manual bank transfer, and they require corporate cards with tiered dual-approval workflows.
+- **Passage Citation**: **M03 Turn 3 [00:06:04] Customer B**: *"Cards first. Our overseas team already has a provider they like. Here we reimburse employees through bank transfer... We need dual approval workflows."*
+- **Product Influence**:
+  - *Screen*: Dashboard KPI Priority Card & Conversations Drawer.
+  - *Rule / Route*: Assigned to **`Deal Next Steps`**.
+  - *Output*: Created action item: *"Provide demonstration of dual-approval workflow and card limits for domestic staff (Owner: team08@example.com, Due: 2026-08-25)"*. Explicitly instructed rep not to displace overseas incumbent.
+
+### Finding 2: Willowfield Trust (M07) — Event-Payment Description Persistence Defect
+- **What Was Noticed**: In meeting `M07` (late transcript update), Customer A shared their screen and demonstrated a software bug: editing the description on an event payment fails to persist after saving—the screen continues displaying previous wording.
+- **Passage Citation**: **M07 Turn 2 & 3 [00:09:59 - 00:11:16] Customer A & Team Member A**: *"The first one is editing the description. I am changing this event-payment description to a short reference... The field still shows the earlier wording. So the change is not appearing after you save, is that right? Yes, it is still the old description."*
+- **Product Influence**:
+  - *Screen*: Replay Banner, Manager Daily Briefing, and Drawer.
+  - *Rule / Route*: Escalated to **`Customer Follow-Up`** & **`Urgent Support Escalation`**.
+  - *Output*: Triggered high-priority engineering defect ticket; marked analysis freshness as `Stale (Awaiting Review)` upon update arrival while strictly preserving manager's manual route override.
+
+### Finding 3: Pranav / Harborlight Advisory (C01) — Cold Call Disqualification & Permission Coaching
+- **What Was Noticed**: Rep Arun pitched through an initial prospect interruption. When Pranav asked *"Why are you calling?"*, Arun launched into capability claims. The prospect interrupted again (*"No, I asked why you have called me"*), challenged how his number was obtained, and confirmed their finance operations are already fully automated.
+- **Passage Citation**: **C01 Quote**: *"Our processes are already very automated. We have a fairly advanced setup, so I don't think this is something we need... where did you find my details?"*
+- **Product Influence**:
+  - *Screen*: Daily Briefing Coaching Tab & Conversation Detail.
+  - *Rule / Route*: Assigned to **`Sales Coaching`**.
+  - *Output*: Marked account as *Disqualified* (preventing fictitious pipeline inflation); generated coaching guidance for Arun on 10-second permission-based cold openers and validating prospect context before delivering capability statements.
 
 ---
 
-## 🔒 Security Best Practices
-- **Credentials Protection**: All API keys and secrets reside strictly in backend environment variables.
-- **Untrusted Input Sanitation**: Transcripts are treated as untrusted text to prevent prompt injection overrides.
-- **CORS Protection**: Restricted to authorized origins.
-- **SQL Injection Prevention**: SQLAlchemy parameterized ORM queries across all endpoints.
-- **Upload Restrictions**: Configurable upload file size limit (default 25MB) and mime-type enforcement.
+## 🚫 One Deliberately Rejected Decision & Accepted Trade-off
+
+- **Rejected Decision**: Automatically generating synthetic AI summaries for silent notetaker records (`M05`, `M08`, `M11`) based on their calendar meeting titles.
+- **Why It Was Rejected**: Upstream calendar titles like *"SpendNest setup - Pinehaven Studio"* are weak hints, not verified ground truth. Upstream notetaker telemetry indicates that although the meeting was recorded, zero speech occurred (`turns: []`). Inventing deal next steps or customer requirements without verbal evidence fabricates dangerous false confidence for sales leadership.
+- **Accepted Trade-off**: The manager sees empty transcript notices and intake telemetry (`No Usable Text / Stored Record`) for 6 calendar meetings rather than polished, artificial summaries.
+- **Resulting Product Choice**: In the UI and export manifest, silent records are explicitly designated as `No Usable Text / Stored Record` with intake telemetry rather than fictitious analysis.
 
 ---
 
-## 📄 License
-MIT License. Built for enterprise sales performance and continuous intelligence.
+## 📦 Export Archive & Machine-Readable Manifest (DATA_CONTRACT.md)
+
+Clicking **"Download Manifest & Export (.ZIP)"** in the UI or calling `GET /api/v1/spendnest/export-archive` generates a compliant zip archive containing:
+
+```
+spendnest_revenue_intelligence_export/
+├── manifest.json                  # Machine-readable JSON manifest
+├── manifest.csv                   # Machine-readable CSV manifest
+├── manager_brief_2026-08-21.md    # Pre-generated Daily Brief for 21 Aug 2026
+├── sales_coaching/                # Coaching markdown documents (e.g. C01, C05)
+├── deal_next_steps/               # Opportunity action documents (e.g. M03, C07, C03)
+├── customer_followup/             # Customer issue documents (e.g. M07, M04, M09)
+├── internal_notes/                # Vendor & technical documents (e.g. M02, M10)
+└── stored_records/                # Intake telemetry files for un-transcribed records
+```
+
+### Manifest Fields (`manifest.json` and `manifest.csv`):
+- `source_type`: `"call"` | `"meeting"`
+- `source_id`: UUID string (e.g. `4f304fff-fd40-5cfc-a366-0a134c445c2a`)
+- `record_ref`: Human-readable reference (`C01`, `M07`, `B01`)
+- `applied_source_revision`: `1` or `2`
+- `routes`: Array of assigned destination routes
+- `output_paths`: Array of relative paths inside the archive
+- `processing_review_state`: `"Processed"` | `"No Usable Text / Intake Stored"`
+- `manual_override_flag`: Boolean (`true` if manager explicitly corrected route)
+- `analysis_freshness`: `"Fresh"` | `"Stale (Awaiting Review)"` | `"Pre-generated"`
+- `customer_name`: Target entity or non-dialable phone token
+- `representative_or_organizer`: Call rep name or meeting organizer email
+- `conversation_date`: ISO timestamp normalized to Asia/Kolkata
+- `has_usable_text`: Boolean
+
+---
+
+## 🤖 Dynamic vs. Pre-Generated Operations
+
+- **Pre-Generated SpendNest Intelligence**: Analysis, evidence citations, coaching notes, and the 21 August 2026 Manager Daily Brief are curated deterministically from the adapted conversation library. This ensures instantaneous test execution and zero dependency on third-party AI service quotas during review.
+- **Dynamic Operations**:
+  - Ingestion diff engine, batch revision comparison (`revision 1` vs `revision 2`), and deduplication logic run dynamically in real time on PostgreSQL.
+  - Manual route overrides, locking, and freshness flag transitions (`Stale (Awaiting Review)`) execute dynamically upon user interaction.
+  - Live Groq AI integration (`llama-3.3-70b-versatile`) is fully configured for dynamic ad-hoc transcript ingestion, diff generation, and purpose extraction.
+
+---
+
+## ⏱️ Hours Spent & Known Limitations
+
+- **Approximate Hours Spent**: ~7.5 hours (architecture design, schema modeling, import replay engine, Alembic migrations, UI dashboard, and slide decks).
+- **Known Limitations**:
+  1. *Calendar Attendee Directory*: Calendar payloads supply `organizer_email` but no verified human participation list. We do not assume meeting organizers were the salespeople.
+  2. *Paraphrased Audio*: Telephony and meeting recordings are adapted text; playable audio waveforms are non-operational.
+  3. *Static Sample Date*: All supplied interactions fall on 21 August 2026 (Asia/Kolkata); temporal analysis across multiple days is outside the supplied dataset.
+
+---
+
+## 📄 Presentation Slides
+The required 5-slide deck is available in two formats:
+1. **PowerPoint Deck**: [`slides.pptx`](file:///c:/Users/sabar/OneDrive/Documents/sales%20project/slides.pptx) (16:9 widescreen presentation)
+2. **Markdown Format**: [`SLIDES.md`](file:///c:/Users/sabar/OneDrive/Documents/sales%20project/SLIDES.md)

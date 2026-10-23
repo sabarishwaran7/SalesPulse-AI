@@ -86,6 +86,31 @@ class Conversation(Base):
     confidence_score = Column(Float, default=0.0)
     is_manually_corrected = Column(Boolean, default=False)
     
+    # SpendNest data contract & envelope fields
+    source_type = Column(String(20), default="call", index=True)  # call, meeting
+    source_id = Column(String(100), index=True)  # payload.id
+    record_ref = Column(String(20), nullable=True, index=True)  # C01, M07, B01, etc.
+    revision = Column(Integer, default=1)
+    batch_id = Column(String(50), default="initial-001")
+    organizer_email = Column(String(255), nullable=True, index=True)
+    rep_email = Column(String(255), nullable=True, index=True)
+    direction = Column(String(50), nullable=True)  # inbound, outbound
+    is_connected = Column(Boolean, nullable=True)
+    is_conversation = Column(Boolean, nullable=True)
+    observed_outcome = Column(String(100), nullable=True)
+    has_usable_text = Column(Boolean, default=False, index=True)
+    unavailable_reason = Column(Text, nullable=True)
+    raw_payload = Column(JSON, nullable=True)
+    raw_transcript_payload = Column(JSON, nullable=True)
+    
+    # Manager routing and preservation
+    assigned_routes = Column(JSON, default=list)  # e.g. ["Sales Coaching", "Deal Next Steps"]
+    routing_reason = Column(Text, nullable=True)
+    manual_route_override = Column(JSON, nullable=True)  # preserved across updates & restarts
+    is_manually_routed = Column(Boolean, default=False, index=True)
+    analysis_freshness = Column(String(50), default="Fresh", index=True)  # Fresh, Stale (Awaiting Review), Pre-generated
+    structured_analysis = Column(JSON, default=dict)
+
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
