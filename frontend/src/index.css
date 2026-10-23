@@ -4,11 +4,22 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 antialiased font-sans selection:bg-indigo-100 selection:text-indigo-900;
+    @apply bg-[#f5f4ee] text-[#1c1d22] antialiased font-sans selection:bg-[#fbc743]/30 selection:text-black;
   }
 }
 
-/* Custom scrollbars */
+/* Diagonal stripes pattern for progress bar matching the reference image */
+.bg-striped-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(215, 210, 195, 0.45),
+    rgba(215, 210, 195, 0.45) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+}
+
+/* Warm custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -17,9 +28,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d8d4c5;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #b8b29f;
 }

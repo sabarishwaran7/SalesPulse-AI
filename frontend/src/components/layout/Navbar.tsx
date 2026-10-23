@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Upload, RefreshCw, Sparkles, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Settings, Bell, User, RefreshCw, Sparkles, CheckCircle2 } from 'lucide-react';
 import { api } from '../../services/api';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  reviewCount?: number;
+  openActionsCount?: number;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ reviewCount = 0, openActionsCount = 0 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [seeding, setSeeding] = useState(false);
   const [seededMessage, setSeededMessage] = useState<string | null>(null);
 
@@ -24,51 +30,103 @@ export const Navbar: React.FC = () => {
     }
   };
 
+  const navLinks = [
+    { name: 'Dashboard', path: '/' },
+    { name: 'Conversations', path: '/conversations' },
+    { name: 'Smart Import', path: '/import' },
+    { name: 'AI Review', path: '/ai-review', badge: reviewCount },
+    { name: 'Actions', path: '/actions', badge: openActionsCount },
+    { name: 'Reports', path: '/reports' },
+    { name: 'History', path: '/imports-history' },
+  ];
+
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10">
-      <div className="flex items-center gap-4">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          System Live
-        </span>
+    <header className="w-full pt-4 px-6 md:px-10 flex items-center justify-between gap-4 z-30 select-none">
+      {/* Brand Pill (Matching "Crextio" pill on far left) */}
+      <div className="flex items-center gap-3">
+        <NavLink
+          to="/"
+          className="inline-flex items-center justify-center px-6 py-2 rounded-full border border-[#d6d1c0] bg-white/80 hover:bg-white text-[#19191d] font-semibold text-lg tracking-tight shadow-xs backdrop-blur-md transition-all hover:scale-[1.02]"
+        >
+          <span>SalesPulse</span>
+        </NavLink>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Floating Center Pill Navigation (Exact match to reference bar) */}
+      <nav className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-full bg-[#eae6d8]/80 border border-[#dbd6c3] shadow-xs backdrop-blur-md">
+        {navLinks.map((item) => {
+          const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              title={item.name}
+              className={`relative px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-[#1c1d22] text-white shadow-sm font-semibold'
+                  : 'text-[#505259] hover:text-[#1c1d22] hover:bg-white/40'
+              }`}
+            >
+              <span>{item.name}</span>
+              {Boolean(item.badge && item.badge > 0) && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isActive ? 'bg-[#fbc743] text-[#1c1d22]' : 'bg-[#1c1d22] text-white'
+                  }`}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Right Controls: Setting, Notification Bell, Profile, Seed */}
+      <div className="flex items-center gap-2.5">
         {seededMessage && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 animate-fade-in">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="hidden xl:flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50/90 px-3 py-1.5 rounded-full border border-emerald-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>{seededMessage}</span>
           </div>
         )}
 
+        {/* Reset / Seed Demo Data Pill */}
         <button
           onClick={handleSeedData}
           disabled={seeding}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 disabled:opacity-50"
-          title="Reset or re-populate with realistic enterprise calls and late transcripts"
+          className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#d6d1c0] bg-white/80 hover:bg-white text-xs font-medium text-[#2d2f36] shadow-xs backdrop-blur-md transition-all hover:scale-102 disabled:opacity-50"
+          title="Reset sample enterprise calls and transcripts"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${seeding ? 'animate-spin' : ''}`} />
-          <span>{seeding ? 'Seeding Data...' : 'Reset Sample Data'}</span>
+          <span className="hidden xl:inline">{seeding ? 'Seeding...' : 'Reset Data'}</span>
         </button>
 
-        <button
-          onClick={() => navigate('/import')}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs shadow-indigo-200"
+        {/* Setting Pill Button (Matching "Setting" pill in image) */}
+        <NavLink
+          to="/settings"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#d6d1c0] bg-white/80 hover:bg-white text-xs font-medium text-[#2d2f36] shadow-xs backdrop-blur-md transition-all hover:scale-102"
         >
-          <Upload className="w-3.5 h-3.5" />
-          <span>Smart Import</span>
+          <Settings className="w-3.5 h-3.5 text-[#505259]" />
+          <span className="hidden sm:inline">Setting</span>
+        </NavLink>
+
+        {/* Notification Bell Circle */}
+        <button
+          onClick={() => navigate('/actions')}
+          className="w-9 h-9 rounded-full border border-[#d6d1c0] bg-white/80 hover:bg-white flex items-center justify-center text-[#2d2f36] shadow-xs backdrop-blur-md relative transition-all hover:scale-105"
+          title="Notifications & Action Alerts"
+        >
+          <Bell className="w-4 h-4 text-[#505259]" />
+          <span className="w-2 h-2 rounded-full bg-[#fbc743] absolute top-2 right-2 ring-1 ring-white" />
         </button>
 
-        <div className="h-5 w-px bg-slate-200 mx-1"></div>
-
-        <div className="flex items-center gap-2.5 pl-1">
-          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center font-bold text-xs text-slate-700">
-            SM
-          </div>
-          <div className="hidden sm:block text-left">
-            <p className="text-xs font-semibold text-slate-800 leading-none">Sales Manager</p>
-            <p className="text-[10px] text-slate-500 leading-tight">Admin Reviewer</p>
-          </div>
+        {/* User Profile Circle */}
+        <div
+          className="w-9 h-9 rounded-full border border-[#d6d1c0] bg-white/80 hover:bg-white flex items-center justify-center text-[#2d2f36] shadow-xs backdrop-blur-md cursor-pointer transition-all hover:scale-105"
+          title="User Account: Sales Manager"
+        >
+          <User className="w-4 h-4 text-[#505259]" />
         </div>
       </div>
     </header>
